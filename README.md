@@ -9,5 +9,5 @@
 
 
 ## Полезные ссылки
-- [Репорт ошибок](https://github.com/ItzIsonn/CMV/issues)
+- [Репорт ошибок](https://github.com/ItzIsonn/CMV/issues) ([Уже известные ошибки](https://github.com/ItzIsonn/CMV/wiki/Известные-ошибки))
 - [Вики](https://github.com/ItzIsonn/CMV/wiki)
