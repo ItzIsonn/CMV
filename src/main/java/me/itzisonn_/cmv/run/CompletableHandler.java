@@ -24,20 +24,8 @@ public abstract class CompletableHandler extends Handler {
     }
 
     @Override
-    protected Variable getVariable(String name) {
-        for (Variable variable : variables) {
-            if (variable.getName().equals(name)) {
-                return variable;
-            }
-        }
-
-        if (parent != null) return parent.getVariable(name);
-        return null;
-    }
-
-    @Override
     public ArrayList<Variable> getVariables() {
-        ArrayList<Variable> toReturn = variables;
+        ArrayList<Variable> toReturn = new ArrayList<>(variables);
         if (parent != null) toReturn.addAll(parent.getVariables());
 
         return toReturn;

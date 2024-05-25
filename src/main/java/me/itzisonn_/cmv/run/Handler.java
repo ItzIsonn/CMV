@@ -91,9 +91,9 @@ public abstract class Handler {
     protected void handleFunction() {
         isHandled = true;
 
-        if (line.matches("[a-zA-Z_]*\\s?\\(\\s?\\)")) {
+        if (line.matches("[a-zA-Z_]+\\s?\\(\\s?\\)")) {
             String name;
-            Matcher nameMatcher = Pattern.compile("([a-zA-Z_]*)\\s?\\(\\s?\\)").matcher(line);
+            Matcher nameMatcher = Pattern.compile("([a-zA-Z_]+)\\s?\\(\\s?\\)").matcher(line);
             if (nameMatcher.find()) name = nameMatcher.group(1);
             else throw new RuntimeException(lineNumber, "can't find function's name");
 
@@ -101,10 +101,10 @@ public abstract class Handler {
             return;
         }
 
-        if (line.matches("[a-zA-Z_]*\\s?\\(.+\\)")) {
+        if (line.matches("[a-zA-Z_]+\\s?\\(.+\\)")) {
             String name;
             String stringParams;
-            Matcher matcher = Pattern.compile("([a-zA-Z_]*)\\s?\\((.*)\\)").matcher(line);
+            Matcher matcher = Pattern.compile("([a-zA-Z_]+)\\s?\\((.*)\\)").matcher(line);
             if (matcher.find()) {
                 name = matcher.group(1).trim();
                 stringParams = matcher.group(2).trim();
@@ -194,10 +194,10 @@ public abstract class Handler {
         isHandled = true;
 
         if (line.startsWith("var")) {
-            if (line.matches("var [a-zA-Z_]*\\s?=\\s?.+")) {
+            if (line.matches("var [a-zA-Z_]+\\s?=\\s?.+")) {
                 String name;
                 String value;
-                Matcher matcher = Pattern.compile("var ([a-zA-Z_]*)\\s?=\\s?(.*)").matcher(line);
+                Matcher matcher = Pattern.compile("var ([a-zA-Z_]+)\\s?=\\s?(.*)").matcher(line);
 
                 if (matcher.find()) {
                     name = matcher.group(1).trim();
@@ -211,9 +211,9 @@ public abstract class Handler {
                 return;
             }
 
-            if (line.matches("var [a-zA-Z_]*")) {
+            if (line.matches("var [a-zA-Z_]+")) {
                 String name;
-                Matcher matcher = Pattern.compile("var ([a-zA-Z_]*)").matcher(line);
+                Matcher matcher = Pattern.compile("var ([a-zA-Z_]+)").matcher(line);
 
                 if (matcher.find()) name = matcher.group(1).trim();
                 else throw new RuntimeException(lineNumber, "can't find variable's name");
@@ -228,10 +228,10 @@ public abstract class Handler {
         }
 
         if (line.startsWith("val")) {
-            if (line.matches("val [a-zA-Z_]*\\s?=\\s?.+")) {
+            if (line.matches("val [a-zA-Z_]+\\s?=\\s?.+")) {
                 String name;
                 String value;
-                Matcher matcher = Pattern.compile("val ([a-zA-Z_]*)\\s?=\\s?(.*)").matcher(line);
+                Matcher matcher = Pattern.compile("val ([a-zA-Z_]+)\\s?=\\s?(.*)").matcher(line);
 
                 if (matcher.find()) {
                     name = matcher.group(1).trim();
@@ -245,13 +245,13 @@ public abstract class Handler {
                 return;
             }
 
-            throw new RuntimeException(lineNumber, "incorrect introduce to the variable");
+            throw new RuntimeException(lineNumber, "incorrect introduce to the constant variable");
         }
 
-        if (line.matches("[a-zA-Z_]*\\s?=\\s?.+")) {
+        if (line.matches("[a-zA-Z_]+\\s?=\\s?.+")) {
             String name;
             String value;
-            Matcher matcher = Pattern.compile("([a-zA-Z_]*)\\s?=\\s?(.*)").matcher(line);
+            Matcher matcher = Pattern.compile("([a-zA-Z_]+)\\s?=\\s?(.*)").matcher(line);
 
             if (matcher.find()) {
                 name = matcher.group(1).trim();
@@ -263,13 +263,45 @@ public abstract class Handler {
             return;
         }
 
+        if (line.matches("[a-zA-Z_]+\\s?[+-/*=]=\\s?.+")) {
+            String name;
+            String operator;
+            String value;
+            Matcher matcher = Pattern.compile("([a-zA-Z_]+)\\s?([+-/*=])=\\s?(.*)").matcher(line);
+
+            if (matcher.find()) {
+                name = matcher.group(1).trim();
+                operator = matcher.group(2).trim();
+                value = matcher.group(3).trim();
+            }
+            else throw new RuntimeException(lineNumber, "can't find operator or variable's name or value");
+
+            getVariable(name).setValue(convertStatement(name + " " + operator + " " + value));
+            return;
+        }
+
+        if (line.matches("[a-zA-Z_]+\\s?([+-])\\1")) {
+            String name;
+            String operator;
+            Matcher matcher = Pattern.compile("([a-zA-Z_]+)\\s?([+-])\\2").matcher(line);
+
+            if (matcher.find()) {
+                name = matcher.group(1).trim();
+                operator = matcher.group(2).trim();
+            }
+            else throw new RuntimeException(lineNumber, "can't find variable's name");
+
+            getVariable(name).setValue(convertStatement(name + " " + operator + " 1"));
+            return;
+        }
+
         isHandled = false;
     }
 
 
 
     protected Variable getVariable(String name) {
-        for (Variable variable : variables) {
+        for (Variable variable : getVariables()) {
             if (variable.getName().equals(name)) {
                 return variable;
             }
@@ -291,19 +323,19 @@ public abstract class Handler {
             return expression.evaluate().getStringValue();
         }
         catch (EvaluationException | ParseException ignore) {
-            if (statement.matches("[a-zA-Z_]*\\s?\\(\\s?\\)")) {
+            if (statement.matches("[a-zA-Z_]+\\s?\\(\\s?\\)")) {
                 String name;
-                Matcher nameMatcher = Pattern.compile("([a-zA-Z_]*)\\s?\\(\\s?\\)").matcher(statement);
+                Matcher nameMatcher = Pattern.compile("([a-zA-Z_]+)\\s?\\(\\s?\\)").matcher(statement);
                 if (nameMatcher.find()) name = nameMatcher.group(1);
                 else throw new RuntimeException(lineNumber, "can't find function's name");
 
                 return Main.getGlobal().getFunction(name).runWithReturn(new ArrayList<>());
             }
 
-            if (statement.matches("[a-zA-Z_]*\\s?\\(.+\\)")) {
+            if (statement.matches("[a-zA-Z_]+\\s?\\(.+\\)")) {
                 String name;
                 String stringParams;
-                Matcher matcher = Pattern.compile("([a-zA-Z_]*)\\s?\\((.*)\\)").matcher(statement);
+                Matcher matcher = Pattern.compile("([a-zA-Z_]+)\\s?\\((.*)\\)").matcher(statement);
                 if (matcher.find()) {
                     name = matcher.group(1).trim();
                     stringParams = matcher.group(2).trim();

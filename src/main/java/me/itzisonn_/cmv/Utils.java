@@ -1,9 +1,14 @@
 package me.itzisonn_.cmv;
 
+import lombok.Getter;
+
 import java.util.ArrayList;
+import java.util.Scanner;
 import java.util.regex.Pattern;
 
 public class Utils {
+    @Getter
+    private static final Scanner scanner = new Scanner(System.in);
     private static final Pattern SPACES = Pattern.compile("(\"[^\"]*(\"|$))|\\s+");
     
     public static Object parseValue(String value) {

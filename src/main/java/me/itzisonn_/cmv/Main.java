@@ -7,22 +7,19 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Scanner;
 
 public class Main {
-    @Getter
-    private static final Scanner scanner = new Scanner(System.in);
     @Getter
     private static Global global;
 
     public static void main(String[] args) {
         if (args.length == 0) {
-            System.out.println("  usage: <file_to_run>");
+            System.out.println("  Usage: <file_to_run>");
             return;
         }
 
         if (args.length >= 2) {
-            System.out.println("  usage: <file_to_run>");
+            System.out.println("  Usage: <file_to_run>");
             return;
         }
 
@@ -39,9 +36,11 @@ public class Main {
             reader.close();
         }
         catch (IOException e) {
-            throw new RuntimeException(e);
+            System.err.println("  Can't find file with name \"" + args[0] + "\"");
+            return;
         }
 
+        System.out.println("  CMV-v1.0.1: running file with name \"" + args[0] + "\"");
         global = new Global(lines);
         global.run();
     }

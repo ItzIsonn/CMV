@@ -28,6 +28,8 @@ public class ForLoop extends CompletableHandler {
         this.line = init;
         handleVariable();
 
+        ArrayList<Variable> backupVariables = new ArrayList<>(variables);
+
         if (!Utils.isBool(convertStatement(termination))) {
             throw new RuntimeException(lineNumber, "expected boolean value in the termination section");
         }
@@ -49,9 +51,14 @@ public class ForLoop extends CompletableHandler {
                 throw new RuntimeException(lineNumber, "can't find close-bracket");
             }
 
+            variables.clear();
+            variables.addAll(backupVariables);
+
             lineNumber = startLineNumber;
             this.line = increment;
             handleVariable();
+
+            backupVariables = new ArrayList<>(variables);
         }
     }
 }

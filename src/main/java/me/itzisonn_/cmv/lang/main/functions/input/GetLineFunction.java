@@ -1,6 +1,7 @@
 package me.itzisonn_.cmv.lang.main.functions.input;
 
 import me.itzisonn_.cmv.Main;
+import me.itzisonn_.cmv.Utils;
 import me.itzisonn_.cmv.lang.exceptions.RuntimeException;
 import me.itzisonn_.cmv.lang.main.Function;
 
@@ -16,6 +17,6 @@ public class GetLineFunction extends Function {
         if (paramsValues.size() > paramsNames.size() || paramsValues.size() < paramsNames.size())
             throw new RuntimeException(Main.getGlobal().getLineNumber(), "expected " + paramsNames.size() + " arguments but found " + paramsValues.size());
 
-        return convertStatement("\"" + Main.getScanner().nextLine() + "\"");
+        return convertStatement("\"" + Utils.getScanner().nextLine() + "\"");
     }
 }
