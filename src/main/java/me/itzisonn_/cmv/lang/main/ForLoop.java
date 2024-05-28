@@ -15,8 +15,9 @@ public class ForLoop extends CompletableHandler {
     private final String init;
     private final String termination;
     private final String increment;
+
     public ForLoop(String init, String termination, String increment, Handler parent) {
-        super(new ArrayList<>(), Main.getGlobal().getLineNumber(), parent);
+        super(new ArrayList<>(), parent.getLineNumber(), parent);
         startLineNumber = lineNumber;
         this.init = init;
         this.termination = termination;
@@ -34,7 +35,7 @@ public class ForLoop extends CompletableHandler {
             throw new RuntimeException(lineNumber, "expected boolean value in the termination section");
         }
 
-        while (Boolean.parseBoolean(convertStatement(termination))) {
+        while (Boolean.parseBoolean(convertStatement(termination).toString())) {
             for (String line : body) {
                 lineNumber++;
                 if (!line.isEmpty() && !line.startsWith("//")) {

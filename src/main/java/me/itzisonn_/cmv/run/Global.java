@@ -1,8 +1,15 @@
 package me.itzisonn_.cmv.run;
 
+import com.ezylang.evalex.Expression;
+import com.ezylang.evalex.config.ExpressionConfiguration;
+import com.ezylang.evalex.data.EvaluationValue;
+import com.ezylang.evalex.parser.Token;
 import lombok.Getter;
+import me.itzisonn_.cmv.lang.main.functions.AbstractEvalFunction;
+import me.itzisonn_.cmv.Utils;
 import me.itzisonn_.cmv.lang.exceptions.RuntimeException;
 import me.itzisonn_.cmv.lang.main.Function;
+import me.itzisonn_.cmv.lang.main.FunctionVariable;
 import me.itzisonn_.cmv.lang.main.functions.input.GetArgFunction;
 import me.itzisonn_.cmv.lang.main.functions.input.GetLineFunction;
 import me.itzisonn_.cmv.lang.main.functions.print.PrintFunction;
@@ -10,6 +17,7 @@ import me.itzisonn_.cmv.lang.main.functions.print.PrintlnFunction;
 import me.itzisonn_.cmv.lang.main.functions.strings.GetCharAtFunction;
 import me.itzisonn_.cmv.lang.main.functions.strings.GetLengthFunction;
 import me.itzisonn_.cmv.lang.main.functions.strings.SetCharAtFunction;
+import me.itzisonn_.cmv.lang.types.Type;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -37,34 +45,47 @@ public class Global extends Handler {
         isHandled = true;
 
         if (line.startsWith("function")) {
-            if (line.matches("function [a-zA-Z_]*\\s?\\(\\s?\\)\\s?\\{")) {
-                String name;
-                Matcher nameMatcher = Pattern.compile("function ([a-zA-Z_]*)\\s?\\(\\s?\\)\\s?\\{").matcher(line);
-                if (nameMatcher.find()) name = nameMatcher.group(1);
-                else throw new RuntimeException(lineNumber, "can't find function's name");
-
-                Function function = new Function(name, new ArrayList<>(), this);
-                functions.add(function);
-
-                uncompletedHandler = function;
-                return;
-            }
-
-            if (line.matches("function [a-zA-Z_]*\\s?\\(.+\\)\\s?\\{")) {
+            if (line.matches("function ([a-zA-Z_]+)\\s?\\((.*)\\)\\s?(:\\s?([a-zA-Z]+)\\s?)?\\{")) {
                 String name;
                 String stringParams;
-                Matcher matcher = Pattern.compile("function ([a-zA-Z_]*)\\s?\\((.*)\\)\\s?\\{").matcher(line);
+                Type type;
+                Matcher matcher = Pattern.compile("function ([a-zA-Z_]+)\\s?\\((.*)\\)\\s?(:\\s?([a-zA-Z]+)\\s?)?\\{").matcher(line);
                 if (matcher.find()) {
                     name = matcher.group(1).trim();
                     stringParams = matcher.group(2).trim();
+                    type = matcher.group(4) == null ? null : Type.ofString(matcher.group(4).trim());
                 }
-                else throw new RuntimeException(lineNumber, "can't find function's name or params");
+                else throw new RuntimeException(lineNumber, "can't find function's name, params or return type");
 
-                ArrayList<String> params = new ArrayList<>();
-                for (String param : new ArrayList<>(Arrays.asList(stringParams.split(",")))) {
-                    params.add(param.replaceAll("var", "").trim());
+                ArrayList<FunctionVariable> params = new ArrayList<>();
+                if (!stringParams.isEmpty()) {
+                    for (String param : Utils.split(stringParams, ',')) {
+                        param = param.trim();
+
+                        if (!param.matches("(var|val) ([a-zA-Z_]+)(\\s?:\\s?([a-zA-Z]+))?"))
+                            throw new RuntimeException(lineNumber, "incorrect introduce to the variable");
+
+                        boolean isConst;
+                        String variableName;
+                        Type variableType;
+                        Matcher variableMatcher = Pattern.compile("(var|val) ([a-zA-Z_]+)(\\s?:\\s?([a-zA-Z]+))?").matcher(param);
+
+                        if (variableMatcher.find()) {
+                            isConst = variableMatcher.group(1).trim().equals("val");
+                            variableName = variableMatcher.group(2).trim();
+                            variableType = variableMatcher.group(4) == null ? Type.ANY : Type.ofString(variableMatcher.group(4).trim());
+                        }
+                        else throw new RuntimeException(lineNumber, "incorrect introduce to the variable");
+
+                        if (containsVariable(params, variableName))
+                            throw new RuntimeException(lineNumber, "variable \"" + variableName + "\" already exists");
+
+                        FunctionVariable variable = new FunctionVariable(variableName, variableType, isConst);
+                        params.add(variable);
+                    }
                 }
-                Function function = new Function(name, params, this);
+
+                Function function = new Function(name, params, type, this);
                 functions.add(function);
 
                 uncompletedHandler = function;
@@ -87,29 +108,31 @@ public class Global extends Handler {
         throw new RuntimeException(lineNumber, "can't find function with name \"" + name + "\"");
     }
 
-//    public ExpressionConfiguration getFunctionsConfiguration() {
-//        ExpressionConfiguration configuration = ExpressionConfiguration.defaultConfiguration();
-//
-//        for (Function function : functions) {
-//            configuration.getFunctionDictionary().addFunction(function.getName(),
-//                    new AbstractFunction() {
-//                        @Override
-//                        public EvaluationValue evaluate(Expression expression, Token token, EvaluationValue... evaluationValues) {
-//                            for (String name : function.getParamsNames()) {
-//                                getFunctionParameterDefinitions().add(
-//                                        FunctionParameterDefinition.builder().name(name).isVarArg(false).isLazy(false).nonZero(false).nonNegative(false).build());
-//                            }
-//
-//                            ArrayList<String> params = new ArrayList<>();
-//                            for (EvaluationValue value : evaluationValues) {
-//                                params.add(value.getStringValue());
-//                            }
-//                            return new EvaluationValue(function.runWithReturn(params), ExpressionConfiguration.defaultConfiguration());
-//                        }
-//                    });
-//            ;
-//        }
-//
-//        return configuration;
-//    }
+    private boolean containsVariable(ArrayList<FunctionVariable> variables, String name) {
+        for (FunctionVariable variable : variables) {
+            if (variable.getName().equals(name)) return true;
+        }
+
+        return false;
+    }
+
+    public ExpressionConfiguration getFunctionsConfiguration() {
+        ExpressionConfiguration configuration = ExpressionConfiguration.defaultConfiguration();
+
+        for (Function function : functions) {
+            configuration.getFunctionDictionary().addFunction(function.getName(),
+                    new AbstractEvalFunction(function.getParams()) {
+                        @Override
+                        public EvaluationValue evaluate(Expression expression, Token token, EvaluationValue... evaluationValues) {
+                            ArrayList<Object> params = new ArrayList<>();
+                            for (EvaluationValue value : evaluationValues) {
+                                params.add(Utils.convertBigDecimal(value.getValue()));
+                            }
+                            return new EvaluationValue(function.runWithReturn(params), ExpressionConfiguration.defaultConfiguration());
+                        }
+                    });
+        }
+
+        return configuration;
+    }
 }

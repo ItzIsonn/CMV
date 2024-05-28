@@ -1,7 +1,6 @@
 package me.itzisonn_.cmv.lang.main;
 
 import lombok.EqualsAndHashCode;
-import me.itzisonn_.cmv.Main;
 import me.itzisonn_.cmv.Utils;
 import me.itzisonn_.cmv.lang.exceptions.RuntimeException;
 import me.itzisonn_.cmv.run.CompletableHandler;
@@ -13,10 +12,10 @@ import java.util.ArrayList;
 public class IfCondition extends CompletableHandler {
     private final boolean bool;
 
-    public IfCondition(String bool, Handler parent) {
-        super(new ArrayList<>(), Main.getGlobal().getLineNumber(), parent);
+    public IfCondition(Object bool, Handler parent) {
+        super(new ArrayList<>(), parent.getLineNumber(), parent);
         if (!Utils.isBool(bool)) throw new RuntimeException(lineNumber, "expected boolean value");
-        this.bool = Boolean.parseBoolean(bool);
+        this.bool = Boolean.parseBoolean(bool.toString());
     }
 
     @Override

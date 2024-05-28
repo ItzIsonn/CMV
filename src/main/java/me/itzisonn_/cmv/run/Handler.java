@@ -11,7 +11,8 @@ import me.itzisonn_.cmv.lang.main.IfCondition;
 import me.itzisonn_.cmv.lang.main.Variable;
 import me.itzisonn_.cmv.Utils;
 import me.itzisonn_.cmv.lang.main.WhileLoop;
-import me.itzisonn_.cmv.lang.types.VoidType;
+import me.itzisonn_.cmv.lang.types.Type;
+import me.itzisonn_.cmv.lang.types.VoidValue;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -91,17 +92,7 @@ public abstract class Handler {
     protected void handleFunction() {
         isHandled = true;
 
-        if (line.matches("[a-zA-Z_]+\\s?\\(\\s?\\)")) {
-            String name;
-            Matcher nameMatcher = Pattern.compile("([a-zA-Z_]+)\\s?\\(\\s?\\)").matcher(line);
-            if (nameMatcher.find()) name = nameMatcher.group(1);
-            else throw new RuntimeException(lineNumber, "can't find function's name");
-
-            Main.getGlobal().getFunction(name).run(new ArrayList<>());
-            return;
-        }
-
-        if (line.matches("[a-zA-Z_]+\\s?\\(.+\\)")) {
+        if (line.matches("([a-zA-Z_]+)\\s?\\((.*)\\)")) {
             String name;
             String stringParams;
             Matcher matcher = Pattern.compile("([a-zA-Z_]+)\\s?\\((.*)\\)").matcher(line);
@@ -111,9 +102,11 @@ public abstract class Handler {
             }
             else throw new RuntimeException(lineNumber, "can't find function's name or params");
 
-            ArrayList<String> params = new ArrayList<>();
-            for (String stringParam : Utils.split(stringParams, ',')) {
-                params.add(convertStatement(stringParam.trim()));
+            ArrayList<Object> params = new ArrayList<>();
+            if (!stringParams.isEmpty()) {
+                for (String stringParam : Utils.split(stringParams, ',')) {
+                    params.add(convertStatement(stringParam.trim()));
+                }
             }
 
             Main.getGlobal().getFunction(name).run(params);
@@ -129,7 +122,7 @@ public abstract class Handler {
         if (line.startsWith("if")) {
             if (line.matches("if\\s?\\(.+\\)\\s?\\{")) {
                 String expression;
-                Matcher expressionMatcher = Pattern.compile("if\\s?\\((.*)\\)\\s?\\{").matcher(line);
+                Matcher expressionMatcher = Pattern.compile("if\\s?\\((.+)\\)\\s?\\{").matcher(line);
                 if (expressionMatcher.find()) expression = expressionMatcher.group(1);
                 else throw new RuntimeException(lineNumber, "can't find if's expression");
 
@@ -149,7 +142,7 @@ public abstract class Handler {
         if (line.startsWith("for")) {
             if (line.matches("for\\s?\\(.+\\)\\s?\\{")) {
                 String stringArgs;
-                Matcher argsMatcher = Pattern.compile("for\\s?\\((.*)\\)\\s?\\{").matcher(line);
+                Matcher argsMatcher = Pattern.compile("for\\s?\\((.+)\\)\\s?\\{").matcher(line);
                 if (argsMatcher.find()) stringArgs = argsMatcher.group(1);
                 else throw new RuntimeException(lineNumber, "can't find for's args");
 
@@ -176,7 +169,7 @@ public abstract class Handler {
         if (line.startsWith("while")) {
             if (line.matches("while\\s?\\(.+\\)\\s?\\{")) {
                 String expression;
-                Matcher expressionMatcher = Pattern.compile("while\\s?\\((.*)\\)\\s?\\{").matcher(line);
+                Matcher expressionMatcher = Pattern.compile("while\\s?\\((.+)\\)\\s?\\{").matcher(line);
                 if (expressionMatcher.find()) expression = expressionMatcher.group(1);
                 else throw new RuntimeException(lineNumber, "can't find while's expression");
 
@@ -193,94 +186,53 @@ public abstract class Handler {
     protected void handleVariable() {
         isHandled = true;
 
-        if (line.startsWith("var")) {
-            if (line.matches("var [a-zA-Z_]+\\s?=\\s?.+")) {
-                String name;
-                String value;
-                Matcher matcher = Pattern.compile("var ([a-zA-Z_]+)\\s?=\\s?(.*)").matcher(line);
+        if (line.startsWith("var") || line.startsWith("val")) {
+            if (!line.matches("(var|val) ([a-zA-Z_]+)(\\s?:\\s?([a-zA-Z]+))?\\s?(=\\s?(.+))?"))
+                throw new RuntimeException(lineNumber, "incorrect introduce to the variable");
 
-                if (matcher.find()) {
-                    name = matcher.group(1).trim();
-                    value = matcher.group(2).trim();
-                }
-                else throw new RuntimeException(lineNumber, "can't find variable's name or value");
-                if (getVariable(name) != null) throw new RuntimeException(lineNumber, "variable \"" + name + "\" already exists");
-
-                Variable variable = new Variable(name, convertStatement(value), false);
-                variables.add(variable);
-                return;
-            }
-
-            if (line.matches("var [a-zA-Z_]+")) {
-                String name;
-                Matcher matcher = Pattern.compile("var ([a-zA-Z_]+)").matcher(line);
-
-                if (matcher.find()) name = matcher.group(1).trim();
-                else throw new RuntimeException(lineNumber, "can't find variable's name");
-                if (getVariable(name) != null) throw new RuntimeException(lineNumber, "variable \"" + name + "\" already exists");
-
-                Variable variable = new Variable(name, false);
-                variables.add(variable);
-                return;
-            }
-
-            throw new RuntimeException(lineNumber, "incorrect introduce to the variable");
-        }
-
-        if (line.startsWith("val")) {
-            if (line.matches("val [a-zA-Z_]+\\s?=\\s?.+")) {
-                String name;
-                String value;
-                Matcher matcher = Pattern.compile("val ([a-zA-Z_]+)\\s?=\\s?(.*)").matcher(line);
-
-                if (matcher.find()) {
-                    name = matcher.group(1).trim();
-                    value = matcher.group(2).trim();
-                }
-                else throw new RuntimeException(lineNumber, "can't find variable's name or value");
-                if (getVariable(name) != null) throw new RuntimeException(lineNumber, "variable \"" + name + "\" already exists");
-
-                Variable variable = new Variable(name, convertStatement(value), true);
-                variables.add(variable);
-                return;
-            }
-
-            throw new RuntimeException(lineNumber, "incorrect introduce to the constant variable");
-        }
-
-        if (line.matches("[a-zA-Z_]+\\s?=\\s?.+")) {
+            boolean isConst;
             String name;
+            Type type;
             String value;
-            Matcher matcher = Pattern.compile("([a-zA-Z_]+)\\s?=\\s?(.*)").matcher(line);
+            Matcher matcher = Pattern.compile("(var|val) ([a-zA-Z_]+)(\\s?:\\s?([a-zA-Z]+))?\\s?(=\\s?(.+))?").matcher(line);
 
             if (matcher.find()) {
-                name = matcher.group(1).trim();
-                value = matcher.group(2).trim();
+                isConst = matcher.group(1).trim().equals("val");
+                name = matcher.group(2).trim();
+                type = matcher.group(4) == null ? Type.ANY : Type.ofString(matcher.group(4).trim());
+                value = matcher.group(6);
             }
-            else throw new RuntimeException(lineNumber, "can't find variable's name or value");
+            else throw new RuntimeException(lineNumber, "incorrect introduce to the variable");
 
-            getVariable(name).setValue(convertStatement(value));
+            if (getVariable(name) != null)
+                throw new RuntimeException(lineNumber, "variable \"" + name + "\" already exists");
+
+            if (value == null && isConst) throw new RuntimeException(lineNumber, "constant variable must be initialized");
+
+            Variable variable = new Variable(name, type, value == null ? new VoidValue() : convertStatement(value.trim()), isConst);
+            variables.add(variable);
             return;
         }
 
-        if (line.matches("[a-zA-Z_]+\\s?[+-/*=]=\\s?.+")) {
+        if (line.matches("([a-zA-Z_]+)\\s?([+-/*=])?=\\s?(.+)")) {
             String name;
             String operator;
             String value;
-            Matcher matcher = Pattern.compile("([a-zA-Z_]+)\\s?([+-/*=])=\\s?(.*)").matcher(line);
+            Matcher matcher = Pattern.compile("([a-zA-Z_]+)\\s?([+-/*=])?=\\s?(.+)").matcher(line);
 
             if (matcher.find()) {
                 name = matcher.group(1).trim();
-                operator = matcher.group(2).trim();
+                operator = matcher.group(2);
                 value = matcher.group(3).trim();
             }
             else throw new RuntimeException(lineNumber, "can't find operator or variable's name or value");
 
-            getVariable(name).setValue(convertStatement(name + " " + operator + " " + value));
+            if (operator != null) getVariable(name).setValue(convertStatement(name + " " + operator.trim() + " " + value));
+            else getVariable(name).setValue(convertStatement(value));
             return;
         }
 
-        if (line.matches("[a-zA-Z_]+\\s?([+-])\\1")) {
+        if (line.matches("([a-zA-Z_]+)\\s?([+-])\\2")) {
             String name;
             String operator;
             Matcher matcher = Pattern.compile("([a-zA-Z_]+)\\s?([+-])\\2").matcher(line);
@@ -310,46 +262,21 @@ public abstract class Handler {
         return null;
     }
 
-    protected String convertStatement(String statement) {
+    protected Object convertStatement(String statement) {
         try {
             HashMap<String, Object> variablesMap = new HashMap<>();
-            Expression expression = new Expression(statement);
+            Expression expression = new Expression(statement, Main.getGlobal().getFunctionsConfiguration());
             for (Variable variable : getVariables()) {
-                if (expression.getUsedVariables().contains(variable.getName()) && new VoidType().equals(variable.getValue()))
-                    throw new RuntimeException(lineNumber, "value of variable \"" + variable.getName() + "\" isn't defined");
-                variablesMap.put(variable.getName(), Utils.parseValue(String.valueOf(variable.getValue())));
+                if (variable.getValue() instanceof VoidValue) {
+                    if (expression.getUsedVariables().contains(variable.getName()))
+                        throw new RuntimeException(lineNumber, "value of variable \"" + variable.getName() + "\" isn't defined");
+                }
+                else variablesMap.put(variable.getName(), variable.getValue());
             }
             expression.withValues(variablesMap);
-            return expression.evaluate().getStringValue();
+            return Utils.convertBigDecimal(expression.evaluate().getValue());
         }
         catch (EvaluationException | ParseException ignore) {
-            if (statement.matches("[a-zA-Z_]+\\s?\\(\\s?\\)")) {
-                String name;
-                Matcher nameMatcher = Pattern.compile("([a-zA-Z_]+)\\s?\\(\\s?\\)").matcher(statement);
-                if (nameMatcher.find()) name = nameMatcher.group(1);
-                else throw new RuntimeException(lineNumber, "can't find function's name");
-
-                return Main.getGlobal().getFunction(name).runWithReturn(new ArrayList<>());
-            }
-
-            if (statement.matches("[a-zA-Z_]+\\s?\\(.+\\)")) {
-                String name;
-                String stringParams;
-                Matcher matcher = Pattern.compile("([a-zA-Z_]+)\\s?\\((.*)\\)").matcher(statement);
-                if (matcher.find()) {
-                    name = matcher.group(1).trim();
-                    stringParams = matcher.group(2).trim();
-                }
-                else throw new RuntimeException(lineNumber, "can't find function's name or params");
-
-                ArrayList<String> params = new ArrayList<>();
-                for (String stringParam : Utils.split(stringParams, ',')) {
-                    params.add(convertStatement(stringParam.trim()));
-                }
-
-                return Main.getGlobal().getFunction(name).runWithReturn(params);
-            }
-
             throw new RuntimeException(lineNumber, "unknown or incorrect statement: " + statement);
         }
     }

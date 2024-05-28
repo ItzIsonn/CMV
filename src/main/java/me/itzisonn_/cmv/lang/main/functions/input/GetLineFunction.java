@@ -1,21 +1,19 @@
 package me.itzisonn_.cmv.lang.main.functions.input;
 
-import me.itzisonn_.cmv.Main;
 import me.itzisonn_.cmv.Utils;
-import me.itzisonn_.cmv.lang.exceptions.RuntimeException;
-import me.itzisonn_.cmv.lang.main.Function;
+import me.itzisonn_.cmv.lang.main.functions.DefaultFunction;
+import me.itzisonn_.cmv.lang.types.Type;
 
 import java.util.ArrayList;
 
-public class GetLineFunction extends Function {
+public class GetLineFunction extends DefaultFunction {
     public GetLineFunction() {
-        super("getLine", new ArrayList<>(), null);
+        super("getLine", new ArrayList<>(), Type.STRING);
     }
 
     @Override
-    public String runWithReturn(ArrayList<String> paramsValues) {
-        if (paramsValues.size() > paramsNames.size() || paramsValues.size() < paramsNames.size())
-            throw new RuntimeException(Main.getGlobal().getLineNumber(), "expected " + paramsNames.size() + " arguments but found " + paramsValues.size());
+    public Object runWithReturn(ArrayList<Object> paramsValues) {
+        checkValues(paramsValues);
 
         return convertStatement("\"" + Utils.getScanner().nextLine() + "\"");
     }
