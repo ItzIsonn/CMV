@@ -49,7 +49,7 @@ public class Utils {
 
     public static Object convertBigDecimal(Object value) {
         if (value instanceof BigDecimal) {
-            if (Utils.isInt(((BigDecimal) value).floatValue())) {
+            if (Utils.isInt(((BigDecimal) value).longValue())) {
                 return ((BigDecimal) value).intValueExact();
             }
             else {

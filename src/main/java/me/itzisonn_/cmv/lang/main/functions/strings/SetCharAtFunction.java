@@ -2,10 +2,8 @@ package me.itzisonn_.cmv.lang.main.functions.strings;
 
 import me.itzisonn_.cmv.Main;
 import me.itzisonn_.cmv.lang.exceptions.RuntimeException;
-import me.itzisonn_.cmv.lang.main.Function;
 import me.itzisonn_.cmv.lang.main.FunctionVariable;
 import me.itzisonn_.cmv.lang.main.functions.DefaultFunction;
-import me.itzisonn_.cmv.lang.main.functions.print.PrintlnFunction;
 import me.itzisonn_.cmv.lang.types.Type;
 
 import java.util.ArrayList;
@@ -17,11 +15,6 @@ public class SetCharAtFunction extends DefaultFunction {
                 new FunctionVariable("string", Type.STRING, true),
                 new FunctionVariable("pos", Type.INT, true),
                 new FunctionVariable("char", Type.STRING, true))), Type.STRING);
-    }
-
-    @Override
-    public Function copy() {
-        return new SetCharAtFunction();
     }
 
     @Override

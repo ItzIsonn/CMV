@@ -1,6 +1,5 @@
 package me.itzisonn_.cmv.lang.main.functions.print;
 
-import me.itzisonn_.cmv.lang.main.Function;
 import me.itzisonn_.cmv.lang.main.FunctionVariable;
 import me.itzisonn_.cmv.lang.main.functions.DefaultFunction;
 import me.itzisonn_.cmv.lang.types.Type;
@@ -11,11 +10,6 @@ import java.util.List;
 public class PrintFunction extends DefaultFunction {
     public PrintFunction() {
         super("print", new ArrayList<>(List.of(new FunctionVariable("string", Type.ANY, true))), null);
-    }
-
-    @Override
-    public Function copy() {
-        return new PrintFunction();
     }
 
     @Override

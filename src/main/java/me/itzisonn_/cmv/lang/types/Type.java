@@ -22,10 +22,11 @@ public enum Type {
     }
 
     public static Type getType(Object value) {
-        if (Utils.isInt(value)) return INT;
-        if (Utils.isNumeric(value)) return FLOAT;
-        if (Utils.isBool(value)) return BOOL;
-        return STRING;
+        if (value instanceof Integer) return INT;
+        if (value instanceof Float) return FLOAT;
+        if (value instanceof Boolean) return BOOL;
+        if (value instanceof String) return STRING;
+        return ANY;
     }
 
     public static boolean isType(Object value, Type type) {
@@ -34,17 +35,48 @@ public enum Type {
         switch (type) {
             case ANY -> returnValue = true;
             case INT -> {
-                if (Utils.isInt(value)) returnValue = true;
+                if (value instanceof Integer) returnValue = true;
             }
             case FLOAT -> {
-                if (Utils.isNumeric(value)) returnValue = true;
+                if (value instanceof Float) returnValue = true;
             }
             case BOOL -> {
-                if (Utils.isBool(value)) returnValue = true;
+                if (value instanceof Boolean) returnValue = true;
             }
             case STRING -> {
                 if (value instanceof String) returnValue = true;
             }
+        }
+
+        return returnValue;
+    }
+
+    public static Object parseValue(Object value, Type type) {
+        Object returnValue = null;
+
+        switch (type) {
+            case ANY -> returnValue = value;
+            case INT -> {
+                try {
+                    returnValue = Integer.parseInt(value.toString());
+                }
+                catch (NumberFormatException ignore) {
+                    throw new RuntimeException(Main.getGlobal().getLineNumber(), "couldn't parse value to type " + type.name());
+                }
+            }
+            case FLOAT -> {
+                try {
+                    returnValue = Float.parseFloat(value.toString());
+                }
+                catch (NumberFormatException ignore) {
+                    throw new RuntimeException(Main.getGlobal().getLineNumber(), "couldn't parse value to type " + type.name());
+                }
+            }
+            case BOOL -> {
+                if (Utils.isBool(value)) returnValue = Boolean.parseBoolean(value.toString());
+                else throw new RuntimeException(Main.getGlobal().getLineNumber(), "couldn't parse value to type " + type.name());
+            }
+            case STRING -> returnValue = value.toString();
         }
 
         return returnValue;

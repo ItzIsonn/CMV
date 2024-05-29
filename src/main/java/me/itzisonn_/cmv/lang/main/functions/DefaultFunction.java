@@ -7,6 +7,7 @@ import me.itzisonn_.cmv.lang.main.FunctionVariable;
 import me.itzisonn_.cmv.lang.types.Type;
 import me.itzisonn_.cmv.lang.types.VoidValue;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 
 public abstract class DefaultFunction extends Function {
@@ -24,6 +25,16 @@ public abstract class DefaultFunction extends Function {
             if (!(paramsValues.get(i) instanceof VoidValue) && variable.getType() != Type.ANY && !Type.isType(paramsValues.get(i), variable.getType())) {
                 throw new RuntimeException(Main.getGlobal().getLineNumber(), "expected " + variable.getType() + " value but found " + Type.getType(paramsValues.get(i)));
             }
+        }
+    }
+
+    @Override
+    public Function copy() {
+        try {
+            return (Function) Class.forName(getClass().getName()).getConstructor().newInstance();
+        }
+        catch (ClassNotFoundException | InvocationTargetException | NoSuchMethodException | InstantiationException | IllegalAccessException e) {
+            throw new RuntimeException(lineNumber, "couldn't run a function with name " + getName());
         }
     }
 }

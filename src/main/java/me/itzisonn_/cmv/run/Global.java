@@ -17,6 +17,8 @@ import me.itzisonn_.cmv.lang.main.functions.print.PrintlnFunction;
 import me.itzisonn_.cmv.lang.main.functions.strings.GetCharAtFunction;
 import me.itzisonn_.cmv.lang.main.functions.strings.GetLengthFunction;
 import me.itzisonn_.cmv.lang.main.functions.strings.SetCharAtFunction;
+import me.itzisonn_.cmv.lang.main.functions.type.GetTypeFunction;
+import me.itzisonn_.cmv.lang.main.functions.type.ParseToTypeFunction;
 import me.itzisonn_.cmv.lang.types.Type;
 
 import java.util.*;
@@ -37,6 +39,8 @@ public class Global extends Handler {
         functions.add(new GetCharAtFunction());
         functions.add(new SetCharAtFunction());
         functions.add(new GetLengthFunction());
+        functions.add(new ParseToTypeFunction());
+        functions.add(new GetTypeFunction());
 
         handles.add(1, this::introduceFunction);
     }
