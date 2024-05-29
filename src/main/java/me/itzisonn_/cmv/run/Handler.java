@@ -109,7 +109,7 @@ public abstract class Handler {
                 }
             }
 
-            Main.getGlobal().getFunction(name).run(params);
+            Main.getGlobal().getFunction(name, params.size()).run(params);
             return;
         }
 
@@ -273,6 +273,7 @@ public abstract class Handler {
                 }
                 else variablesMap.put(variable.getName(), variable.getValue());
             }
+
             expression.withValues(variablesMap);
             return Utils.convertBigDecimal(expression.evaluate().getValue());
         }

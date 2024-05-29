@@ -78,11 +78,15 @@ public class Global extends Handler {
                         else throw new RuntimeException(lineNumber, "incorrect introduce to the variable");
 
                         if (containsVariable(params, variableName))
-                            throw new RuntimeException(lineNumber, "variable \"" + variableName + "\" already exists");
+                            throw new RuntimeException(lineNumber, "function variable \"" + variableName + "\" already exists");
 
                         FunctionVariable variable = new FunctionVariable(variableName, variableType, isConst);
                         params.add(variable);
                     }
+                }
+
+                if (existFunction(name, params.size())) {
+                    throw new RuntimeException(lineNumber, "function \"" + name + "\" with " + params.size() + " param(s) already exists");
                 }
 
                 Function function = new Function(name, params, type, this);
@@ -98,7 +102,13 @@ public class Global extends Handler {
         isHandled = false;
     }
 
-    public Function getFunction(String name) {
+    public Function getFunction(String name, int size) {
+        for (Function function : functions) {
+            if (name.equals(function.getName()) && size == function.getParams().size()) {
+                return function;
+            }
+        }
+
         for (Function function : functions) {
             if (name.equals(function.getName())) {
                 return function;
@@ -106,6 +116,16 @@ public class Global extends Handler {
         }
 
         throw new RuntimeException(lineNumber, "can't find function with name \"" + name + "\"");
+    }
+
+    private boolean existFunction(String name, int size) {
+        for (Function function : functions) {
+            if (name.equals(function.getName()) && size == function.getParams().size()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private boolean containsVariable(ArrayList<FunctionVariable> variables, String name) {
