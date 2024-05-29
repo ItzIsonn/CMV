@@ -109,7 +109,7 @@ public abstract class Handler {
                 }
             }
 
-            Main.getGlobal().getFunction(name, params.size()).run(params);
+            Main.getGlobal().getFunction(name, params.size()).copy().run(params);
             return;
         }
 
@@ -186,7 +186,7 @@ public abstract class Handler {
     protected void handleVariable() {
         isHandled = true;
 
-        if (line.startsWith("var") || line.startsWith("val")) {
+        if (line.startsWith("var ") || line.startsWith("val ")) {
             if (!line.matches("(var|val) ([a-zA-Z_]+)(\\s?:\\s?([a-zA-Z]+))?\\s?(=\\s?(.+))?"))
                 throw new RuntimeException(lineNumber, "incorrect introduce to the variable");
 

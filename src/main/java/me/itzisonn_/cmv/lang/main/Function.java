@@ -16,6 +16,7 @@ import java.util.regex.Pattern;
 @EqualsAndHashCode(callSuper = false)
 public class Function extends CompletableHandler {
     private Object returnValue = new VoidValue();
+    @Getter
     private final Type returnType;
     private boolean isReturning = false;
     @Getter
@@ -31,6 +32,22 @@ public class Function extends CompletableHandler {
         this.returnType = returnType;
 
         handles.add(this::handleReturn);
+    }
+
+    public Function(Function function) {
+        super(function.body, function.lineNumber, function.getParent());
+        if (!function.name.matches("[a-zA-Z_]*")) throw new RuntimeException(lineNumber, "function's name can only contain English alphabet's letters and underscores");
+        this.name = function.name;
+        this.params = function.params;
+        this.returnType = function.returnType;
+        this.returnValue = new VoidValue();
+        this.isReturning = false;
+
+        handles.add(this::handleReturn);
+    }
+
+    public Function copy() {
+        return new Function(this);
     }
 
     @Override
@@ -52,6 +69,8 @@ public class Function extends CompletableHandler {
         if (bracketIndex > 0) {
             throw new RuntimeException(lineNumber, "can't find close-bracket");
         }
+
+        variables.clear();
     }
 
     public void run(ArrayList<Object> paramsValues) {
@@ -59,16 +78,12 @@ public class Function extends CompletableHandler {
             throw new RuntimeException(Main.getGlobal().getLineNumber(), "expected " + params.size() + " arguments but found " + paramsValues.size());
 
         for (int i = 0; i < params.size(); i++) {
-            FunctionVariable variable = params.get(i);
+            FunctionVariable variable = new FunctionVariable(params.get(i));
             variable.setValue(paramsValues.get(i));
             variables.add(variable);
         }
 
         run();
-
-        for (FunctionVariable variable : params) {
-            variable.clearValue();
-        }
 
         if (returnType != null && returnValue instanceof VoidValue)
             throw new RuntimeException(Main.getGlobal().getLineNumber(), "missing return statement in function \"" + name + "\"");

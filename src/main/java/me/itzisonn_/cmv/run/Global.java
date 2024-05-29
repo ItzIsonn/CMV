@@ -5,10 +5,10 @@ import com.ezylang.evalex.config.ExpressionConfiguration;
 import com.ezylang.evalex.data.EvaluationValue;
 import com.ezylang.evalex.parser.Token;
 import lombok.Getter;
+import me.itzisonn_.cmv.lang.main.Function;
 import me.itzisonn_.cmv.lang.main.functions.AbstractEvalFunction;
 import me.itzisonn_.cmv.Utils;
 import me.itzisonn_.cmv.lang.exceptions.RuntimeException;
-import me.itzisonn_.cmv.lang.main.Function;
 import me.itzisonn_.cmv.lang.main.FunctionVariable;
 import me.itzisonn_.cmv.lang.main.functions.input.GetArgFunction;
 import me.itzisonn_.cmv.lang.main.functions.input.GetLineFunction;
@@ -148,7 +148,7 @@ public class Global extends Handler {
                             for (EvaluationValue value : evaluationValues) {
                                 params.add(Utils.convertBigDecimal(value.getValue()));
                             }
-                            return new EvaluationValue(function.runWithReturn(params), ExpressionConfiguration.defaultConfiguration());
+                            return new EvaluationValue(function.copy().runWithReturn(params), ExpressionConfiguration.defaultConfiguration());
                         }
                     });
         }

@@ -10,6 +10,10 @@ public class FunctionVariable extends Variable {
         super(name, type, new VoidValue(), isConst);
     }
 
+    public FunctionVariable(FunctionVariable functionVariable) {
+        super(functionVariable.getName(), functionVariable.getType(), new VoidValue(), functionVariable.isConst());
+    }
+
     @Override
     public void setValue(Object value) {
         if (isConst && !(this.value instanceof VoidValue)) throw new RuntimeException(Main.getGlobal().getLineNumber(), "can't reassign the value of constant param");

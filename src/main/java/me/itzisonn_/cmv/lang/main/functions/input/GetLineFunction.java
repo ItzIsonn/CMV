@@ -1,7 +1,9 @@
 package me.itzisonn_.cmv.lang.main.functions.input;
 
 import me.itzisonn_.cmv.Utils;
+import me.itzisonn_.cmv.lang.main.Function;
 import me.itzisonn_.cmv.lang.main.functions.DefaultFunction;
+import me.itzisonn_.cmv.lang.main.functions.print.PrintlnFunction;
 import me.itzisonn_.cmv.lang.types.Type;
 
 import java.util.ArrayList;
@@ -9,6 +11,11 @@ import java.util.ArrayList;
 public class GetLineFunction extends DefaultFunction {
     public GetLineFunction() {
         super("getLine", new ArrayList<>(), Type.STRING);
+    }
+
+    @Override
+    public Function copy() {
+        return new GetLineFunction();
     }
 
     @Override

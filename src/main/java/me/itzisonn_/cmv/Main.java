@@ -1,7 +1,5 @@
 package me.itzisonn_.cmv;
 
-import com.ezylang.evalex.EvaluationException;
-import com.ezylang.evalex.parser.ParseException;
 import lombok.Getter;
 import me.itzisonn_.cmv.run.Global;
 
@@ -14,7 +12,7 @@ public class Main {
     @Getter
     private static Global global;
 
-    public static void main(String[] args) throws EvaluationException, ParseException {
+    public static void main(String[] args) {
         if (args.length == 0) {
             System.out.println("  Usage: <file_to_run>");
             return;

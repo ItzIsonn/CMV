@@ -9,7 +9,7 @@ import me.itzisonn_.cmv.lang.types.VoidValue;
 
 import java.util.ArrayList;
 
-public class DefaultFunction extends Function {
+public abstract class DefaultFunction extends Function {
     public DefaultFunction(String name, ArrayList<FunctionVariable> params, Type returnType) {
         super(name, params, returnType, null);
         complete();
