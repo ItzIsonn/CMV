@@ -17,44 +17,40 @@ public class Utils {
         return value.equals("true") || value.equals("false");
     }
 
-    public static boolean isNumeric(Object value) {
-        try {
-            Integer.parseInt(value.toString());
-            return true;
-        }
-        catch (NumberFormatException ignore) {}
+    public static boolean isFloat(Object value) {
+        if (value instanceof Float) return true;
 
         try {
             Float.parseFloat(value.toString());
             return true;
         }
-        catch (NumberFormatException ignore) {}
-
-        return false;
+        catch (NumberFormatException ignore) {
+            return false;
+        }
     }
 
     public static boolean isInt(Object value) {
+        if (value instanceof Integer) return true;
+
         try {
             Integer.parseInt(value.toString());
             return true;
         }
         catch (NumberFormatException ignore) {
-            if (isNumeric(value)) {
-                return value.toString().endsWith(".0");
-            }
-
             return false;
         }
     }
 
     public static Object convertBigDecimal(Object value) {
         if (value instanceof BigDecimal) {
-            if (Utils.isInt(((BigDecimal) value).longValue())) {
-                return ((BigDecimal) value).intValueExact();
+            Object returnValue;
+            try {
+                returnValue = ((BigDecimal) value).intValueExact();
             }
-            else {
-                return ((BigDecimal) value).floatValue();
+            catch (ArithmeticException ignore) {
+                returnValue = ((BigDecimal) value).floatValue();
             }
+            return returnValue;
         }
         return value;
     }

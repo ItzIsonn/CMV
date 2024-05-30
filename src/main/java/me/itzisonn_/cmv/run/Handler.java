@@ -274,7 +274,13 @@ public abstract class Handler {
                 else variablesMap.put(variable.getName(), variable.getValue());
             }
 
-            expression.withValues(variablesMap);
+            try {
+                expression.withValues(variablesMap);
+            }
+            catch (NumberFormatException ignore) {
+                throw new RuntimeException(lineNumber, "too large number");
+            }
+
             return Utils.convertBigDecimal(expression.evaluate().getValue());
         }
         catch (EvaluationException | ParseException ignore) {

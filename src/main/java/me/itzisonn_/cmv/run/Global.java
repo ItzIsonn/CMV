@@ -152,7 +152,13 @@ public class Global extends Handler {
                             for (EvaluationValue value : evaluationValues) {
                                 params.add(Utils.convertBigDecimal(value.getValue()));
                             }
-                            return new EvaluationValue(function.copy().runWithReturn(params), ExpressionConfiguration.defaultConfiguration());
+
+                            try {
+                                return new EvaluationValue(function.copy().runWithReturn(params), ExpressionConfiguration.defaultConfiguration());
+                            }
+                            catch (NumberFormatException ignore) {
+                                throw new RuntimeException(lineNumber, "too large number");
+                            }
                         }
                     });
         }

@@ -40,7 +40,7 @@ public class Main {
             return;
         }
 
-        System.out.println("  CMV-v1.1.3: running file with name \"" + args[0] + "\"");
+        System.out.println("  CMV-v1.1.4: running file with name \"" + args[0] + "\"");
         global = new Global(lines);
         global.run();
     }

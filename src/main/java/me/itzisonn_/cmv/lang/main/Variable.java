@@ -27,7 +27,7 @@ public class Variable {
         if (!name.matches("[a-zA-Z_]+"))
             throw new RuntimeException(Main.getGlobal().getLineNumber(), "variable's name can only contain English alphabet's letters and underscores");
 
-        if (bannedNames.contains(name) || Utils.isNumeric(name))
+        if (bannedNames.contains(name) || Utils.isInt(name) || Utils.isFloat(name))
             throw new RuntimeException(Main.getGlobal().getLineNumber(), "variable's name can't be keyword or numeric");
 
         this.name = name;
@@ -35,8 +35,6 @@ public class Variable {
         setValue(value);
         this.isConst = isConst;
     }
-
-
 
     public void setValue(Object value) {
         if (isConst) throw new RuntimeException(Main.getGlobal().getLineNumber(), "can't reassign the value of constant variable");

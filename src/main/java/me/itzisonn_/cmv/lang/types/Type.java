@@ -22,9 +22,9 @@ public enum Type {
     }
 
     public static Type getType(Object value) {
-        if (value instanceof Integer) return INT;
-        if (value instanceof Float) return FLOAT;
-        if (value instanceof Boolean) return BOOL;
+        if (Utils.isInt(value)) return INT;
+        if (Utils.isFloat(value)) return FLOAT;
+        if (Utils.isBool(value)) return BOOL;
         if (value instanceof String) return STRING;
         return ANY;
     }
@@ -35,13 +35,13 @@ public enum Type {
         switch (type) {
             case ANY -> returnValue = true;
             case INT -> {
-                if (value instanceof Integer) returnValue = true;
+                if (Utils.isInt(value)) returnValue = true;
             }
             case FLOAT -> {
-                if (value instanceof Float) returnValue = true;
+                if (Utils.isFloat(value)) returnValue = true;
             }
             case BOOL -> {
-                if (value instanceof Boolean) returnValue = true;
+                if (Utils.isBool(value)) returnValue = true;
             }
             case STRING -> {
                 if (value instanceof String) returnValue = true;
