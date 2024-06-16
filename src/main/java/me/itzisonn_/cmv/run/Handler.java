@@ -6,11 +6,8 @@ import com.ezylang.evalex.parser.ParseException;
 import lombok.Getter;
 import me.itzisonn_.cmv.Main;
 import me.itzisonn_.cmv.lang.exceptions.RuntimeException;
-import me.itzisonn_.cmv.lang.main.ForLoop;
-import me.itzisonn_.cmv.lang.main.IfCondition;
-import me.itzisonn_.cmv.lang.main.Variable;
+import me.itzisonn_.cmv.lang.main.*;
 import me.itzisonn_.cmv.Utils;
-import me.itzisonn_.cmv.lang.main.WhileLoop;
 import me.itzisonn_.cmv.lang.types.Type;
 import me.itzisonn_.cmv.lang.types.VoidValue;
 
@@ -73,7 +70,14 @@ public abstract class Handler {
 
             if (bracketIndex == 0 && uncompletedHandler != null) {
                 uncompletedHandler.complete();
-                if (uncompletedHandler instanceof IfCondition || uncompletedHandler instanceof ForLoop || uncompletedHandler instanceof WhileLoop) {
+                if (uncompletedHandler instanceof ForLoop || uncompletedHandler instanceof WhileLoop) {
+                    uncompletedHandler.run();
+                }
+                else if (uncompletedHandler instanceof IfCondition) {
+                    if (getNextFullLine() != null && getNextFullLine().startsWith("else")) {
+                        ((IfCondition) uncompletedHandler).finish();
+                        return;
+                    }
                     uncompletedHandler.run();
                 }
                 uncompletedHandler = null;
@@ -82,6 +86,10 @@ public abstract class Handler {
         }
 
         if (bracketIndex > 0 && uncompletedHandler != null) {
+            if (uncompletedHandler instanceof IfCondition && ((IfCondition) uncompletedHandler).getUnfinished() == null) {
+                isHandled = false;
+                return;
+            }
             uncompletedHandler.addLine(line);
             return;
         }
@@ -126,11 +134,43 @@ public abstract class Handler {
                 if (expressionMatcher.find()) expression = expressionMatcher.group(1);
                 else throw new RuntimeException(lineNumber, "can't find if's expression");
 
-                uncompletedHandler = new IfCondition(convertStatement(expression), this);
+                uncompletedHandler = new IfCondition(this);
+                ((IfCondition) uncompletedHandler).getConditions().put(expression, new FinishableArrayList<>());
                 return;
             }
 
             throw new RuntimeException(lineNumber, "incorrect introduce to the \"if\" statement");
+        }
+
+        if (line.startsWith("else if")) {
+            if (line.matches("else if\\s?\\(.+\\)\\s?\\{")) {
+                String expression;
+                Matcher expressionMatcher = Pattern.compile("else if\\s?\\((.+)\\)\\s?\\{").matcher(line);
+                if (expressionMatcher.find()) expression = expressionMatcher.group(1);
+                else throw new RuntimeException(lineNumber, "can't find if's expression");
+
+                if (uncompletedHandler != null && uncompletedHandler instanceof IfCondition) {
+                    ((IfCondition) uncompletedHandler).getConditions().put(expression, new FinishableArrayList<>());
+                }
+                else throw new RuntimeException(lineNumber, "can't use else expression without if");
+                return;
+            }
+
+            throw new RuntimeException(lineNumber, "incorrect introduce to the \"else if\" statement");
+        }
+
+        if (line.startsWith("else")) {
+            if (line.matches("else\\s?\\{")) {
+                if (uncompletedHandler != null && uncompletedHandler instanceof IfCondition) {
+                    if (((IfCondition) uncompletedHandler).getConditions().get("true") != null)
+                        throw new RuntimeException(lineNumber, "unreachable \"else\" statement");
+                    ((IfCondition) uncompletedHandler).getConditions().put("true", new FinishableArrayList<>());
+                }
+                else throw new RuntimeException(lineNumber, "can't use else expression without if");
+                return;
+            }
+
+            throw new RuntimeException(lineNumber, "incorrect introduce to the \"else\" statement");
         }
 
         isHandled = false;
@@ -256,6 +296,16 @@ public abstract class Handler {
         for (Variable variable : getVariables()) {
             if (variable.getName().equals(name)) {
                 return variable;
+            }
+        }
+
+        return null;
+    }
+
+    protected String getNextFullLine() {
+        for (int i = lineNumber; i < body.size(); i++) {
+            if (!line.isEmpty() && !line.startsWith("//")) {
+                return body.get(i);
             }
         }
 
